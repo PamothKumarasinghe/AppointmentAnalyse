@@ -1,4 +1,4 @@
-import { supabase } from "../config/db";
+import { supabase } from "../config/supabase";
 import { asyncHandler } from "../utils/asyncHandler";
 
 export const loadProfile = asyncHandler(async (req, res) => {
@@ -14,6 +14,6 @@ export const loadProfile = asyncHandler(async (req, res) => {
     return res.status(404).json({
       message: "User not found",
     });
-    req.profile = data;
-    next();
+  req.profile = data;
+  next();
 });
