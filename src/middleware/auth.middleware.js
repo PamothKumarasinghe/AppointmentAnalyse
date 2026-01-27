@@ -1,6 +1,6 @@
 import { supabase } from "../config/supabase.js";
 
-export const authMiddleware = async (req, resizeBy, next) => {
+export const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {

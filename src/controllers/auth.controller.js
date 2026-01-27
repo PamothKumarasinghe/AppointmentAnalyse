@@ -1,5 +1,5 @@
-import { supabase } from "../config/supabase";
-import { asyncHandler } from "../utils/asyncHandler";
+import { supabase } from "../config/supabase.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 // both the controllers are developed using supabase auth //
 

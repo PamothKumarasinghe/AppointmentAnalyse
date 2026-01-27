@@ -1,7 +1,7 @@
-import { supabase } from "../config/supabase";
-import { asyncHandler } from "../utils/asyncHandler";
+import { supabase } from "../config/supabase.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
-export const loadProfile = asyncHandler(async (req, res) => {
+export const loadProfile = asyncHandler(async (req, res, next) => {
   const userId = req.user.id;
 
   const { data, error } = await supabase

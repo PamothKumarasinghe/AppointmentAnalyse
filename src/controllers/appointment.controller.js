@@ -1,5 +1,5 @@
-import { supabase } from "../config/supabase";
-import { asyncHandler } from "../utils/asyncHandler";
+import { supabase } from "../config/supabase.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const bookAppointment = asyncHandler(async (req, res) => {
   const { admin_id, date, start_time, end_time } = req.body;
