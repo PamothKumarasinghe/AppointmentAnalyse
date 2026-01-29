@@ -10,4 +10,5 @@ if (!supabaseUrl || !supabaseKey) {
     "Supabase URL or Key is not defined in environment variables",
   );
 }
+
 export const supabase = createClient(supabaseUrl, supabaseKey);

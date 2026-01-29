@@ -1,12 +1,25 @@
 import express from "express";
-import { createAvailablity } from "../controllers/availability.controller.js";
-import { loadProfile } from "../middleware/loadProfile.middleware.js";
-import { authMiddleware } from "../middleware/auth.middleware.js";
-// remember to create the role.middleware.js file later for role based access control
-// add it to the post route below
+import {
+  createAvailability,
+  getAdminAvailability,
+  getMyAvailability,
+  updateAvailability,
+  deleteAvailability,
+} from "../controllers/availability.controller.js";
+import { verifyToken } from "../middleware/auth.middleware.js";
+import { adminOnly } from "../middleware/role.middleware.js";
 
 const router = express.Router();
 
-router.post("/", authMiddleware, loadProfile, createAvailablity);
+// Public route - get any admin's availability
+router.get("/admin/:adminId", getAdminAvailability);
+
+// Protected routes - admin only
+router.use(verifyToken, adminOnly);
+
+router.post("/", createAvailability);
+router.get("/my", getMyAvailability);
+router.put("/:availabilityId", updateAvailability);
+router.delete("/:availabilityId", deleteAvailability);
 
 export default router;
