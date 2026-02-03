@@ -12,9 +12,7 @@ export const getAllAdmins = asyncHandler(async (req, res) => {
 
   // Search by name or specialty
   if (search) {
-    query = query.or(
-      `full_name.ilike.%${search}%,specialty.ilike.%${search}%`
-    );
+    query = query.or(`full_name.ilike.%${search}%,specialty.ilike.%${search}%`);
   }
 
   const { data, error } = await query;

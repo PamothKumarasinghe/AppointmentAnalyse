@@ -12,6 +12,8 @@ export const createAvailability = asyncHandler(async (req, res) => {
     recurrence_type,
     specific_date,
   } = req.body;
+  
+  console.log("Creating availability with data:", req.body);
 
   // Validation
   if (!start_time || !end_time || !slot_duration) {
@@ -61,6 +63,8 @@ export const createAvailability = asyncHandler(async (req, res) => {
 export const getAdminAvailability = asyncHandler(async (req, res) => {
   const { adminId } = req.params;
 
+  console.log("Fetching availability for adminId:", adminId);
+  
   const { data, error } = await supabase
     .from("availability")
     .select("*")
@@ -83,7 +87,9 @@ export const getAdminAvailability = asyncHandler(async (req, res) => {
 export const getMyAvailability = asyncHandler(async (req, res) => {
   const adminId = req.user.id;
 
-  const { data, error } = await supabase
+  console.log("Fetching availability for adminId:", adminId);
+  const { data, error } = await supabasefix
+    
     .from("availability")
     .select("*")
     .eq("admin_id", adminId)

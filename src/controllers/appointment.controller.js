@@ -41,11 +41,13 @@ export const createAppointment = asyncHandler(async (req, res) => {
       notes,
       status: "pending",
     })
-    .select(`
+    .select(
+      `
       *,
       admin:admin_id(id, full_name, email, specialty),
       user:user_id(id, full_name, email)
-    `)
+    `,
+    )
     .single();
 
   if (error) {
@@ -67,10 +69,12 @@ export const getMyAppointments = asyncHandler(async (req, res) => {
 
   let query = supabase
     .from("appointments")
-    .select(`
+    .select(
+      `
       *,
       admin:admin_id(id, full_name, email, specialty)
-    `)
+    `,
+    )
     .eq("user_id", userId)
     .order("date", { ascending: true })
     .order("start_time", { ascending: true });
@@ -99,10 +103,12 @@ export const getAdminAppointments = asyncHandler(async (req, res) => {
 
   let query = supabase
     .from("appointments")
-    .select(`
+    .select(
+      `
       *,
       user:user_id(id, full_name, email, phone)
-    `)
+    `,
+    )
     .eq("admin_id", adminId)
     .order("date", { ascending: true })
     .order("start_time", { ascending: true });
@@ -146,10 +152,12 @@ export const updateAppointmentStatus = asyncHandler(async (req, res) => {
     .update({ status })
     .eq("id", appointmentId)
     .eq("admin_id", adminId) // Ensure admin can only update their own appointments
-    .select(`
+    .select(
+      `
       *,
       user:user_id(id, full_name, email)
-    `)
+    `,
+    )
     .single();
 
   if (error) {
@@ -237,7 +245,7 @@ export const getAvailableSlots = asyncHandler(async (req, res) => {
 
   // Generate and filter slots
   const { generateSlots } = await import("../utils/slotGenerator.js");
-  
+
   let allSlots = [];
   availability.forEach((av) => {
     const slots = generateSlots(av.start_time, av.end_time, av.slot_duration);
@@ -248,8 +256,8 @@ export const getAvailableSlots = asyncHandler(async (req, res) => {
   const availableSlots = allSlots.filter(
     (slot) =>
       !bookedSlots?.some(
-        (appointment) => appointment.start_time === slot.start
-      )
+        (appointment) => appointment.start_time === slot.start,
+      ),
   );
 
   res.json({

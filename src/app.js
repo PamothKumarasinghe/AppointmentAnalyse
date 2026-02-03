@@ -1,12 +1,20 @@
 import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
+import cors from "cors";
 import authRoutes from "./routes/auth.routes.js";
 import availabilityRoutes from "./routes/availability.routes.js";
 import appointmentRoutes from "./routes/appointment.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 
 const app = express();
+
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true,
+}));
+
 app.use(express.json());
 
 app.get("/", (req, res) => {
