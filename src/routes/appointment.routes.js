@@ -6,6 +6,7 @@ import {
   updateAppointmentStatus,
   cancelAppointment,
   getAvailableSlots,
+  cleanupOverdue,
 } from "../controllers/appointment.controller.js";
 import { verifyToken } from "../middleware/auth.middleware.js";
 import { userOnly, adminOnly } from "../middleware/role.middleware.js";
@@ -26,5 +27,6 @@ router.put("/:appointmentId/cancel", userOnly, cancelAppointment);
 // Admin routes
 router.get("/admin", adminOnly, getAdminAppointments);
 router.put("/:appointmentId/status", adminOnly, updateAppointmentStatus);
+router.post("/cleanup", adminOnly, cleanupOverdue); // Manual cleanup endpoint
 
 export default router;

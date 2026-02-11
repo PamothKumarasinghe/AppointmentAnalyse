@@ -1,6 +1,35 @@
 import { supabase } from "../config/supabase.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
+// Cleanup overdue pending appointments by marking them as rejected
+const cleanupOverdueAppointments = async () => {
+  const now = new Date();
+  const currentDate = now.toISOString().split("T")[0];
+  const currentTime = now.toTimeString().split(" ")[0].substring(0, 5); // HH:MM format
+
+  // Mark pending appointments as rejected where:
+  // 1. Date is in the past, OR
+  // 2. Date is today but start time has passed
+  const { data, error } = await supabase
+    .from("appointments")
+    .update({ status: "rejected" })
+    .eq("status", "pending")
+    .or(
+      `date.lt.${currentDate},and(date.eq.${currentDate},start_time.lt.${currentTime})`,
+    )
+    .select();
+
+  if (error) {
+    console.error("Error cleaning up overdue appointments:", error.message);
+    return { rejected: 0, error };
+  }
+
+  console.log(
+    `Auto-rejected ${data?.length || 0} overdue pending appointments`,
+  );
+  return { rejected: data?.length || 0 };
+};
+
 // Create appointment (User only)
 export const createAppointment = asyncHandler(async (req, res) => {
   const userId = req.user.id;
@@ -67,6 +96,9 @@ export const getMyAppointments = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const { status } = req.query; // Optional filter by status
 
+  // Cleanup overdue pending appointments before fetching
+  await cleanupOverdueAppointments();
+
   let query = supabase
     .from("appointments")
     .select(
@@ -100,6 +132,9 @@ export const getMyAppointments = asyncHandler(async (req, res) => {
 export const getAdminAppointments = asyncHandler(async (req, res) => {
   const adminId = req.user.id;
   const { status, date } = req.query; // Optional filters
+
+  // Cleanup overdue pending appointments before fetching
+  await cleanupOverdueAppointments();
 
   let query = supabase
     .from("appointments")
@@ -279,4 +314,21 @@ export const bookAppointment = asyncHandler(async (req, res) => {
   if (error) return res.status(400).json({ message: error.message });
 
   res.json({ message: "Appointment booked successfully" });
+});
+
+// Manual cleanup endpoint (optional - can be called by cron job)
+export const cleanupOverdue = asyncHandler(async (req, res) => {
+  const result = await cleanupOverdueAppointments();
+
+  if (result.error) {
+    return res.status(500).json({
+      message: "Error during cleanup",
+      error: result.error.message,
+    });
+  }
+
+  res.json({
+    message: "Cleanup completed successfully",
+    rejected: result.rejected,
+  });
 });

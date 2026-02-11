@@ -1,48 +1,82 @@
 import { supabase } from "../config/supabase.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
+// Helper function to calculate end date based on recurrence type
+const calculateEndDate = (selectedDate, recurrenceType) => {
+  const date = new Date(selectedDate);
+
+  if (recurrenceType === "daily") {
+    // Daily: same day only
+    return selectedDate;
+  } else if (recurrenceType === "weekly") {
+    // Weekly: until the end of current week (Sunday)
+    const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
+    const daysUntilSunday = 7 - dayOfWeek;
+    const endDate = new Date(date);
+    endDate.setDate(date.getDate() + daysUntilSunday);
+    return endDate.toISOString().split("T")[0];
+  } else if (recurrenceType === "monthly") {
+    // Monthly: until the end of current month
+    const endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    return endDate.toISOString().split("T")[0];
+  }
+
+  return selectedDate;
+};
+
 // Create availability (Admin only)
 export const createAvailability = asyncHandler(async (req, res) => {
   const adminId = req.user.id;
   const {
-    day_of_week,
+    selected_date, // The date admin selected (required)
     start_time,
     end_time,
     slot_duration,
-    recurrence_type,
-    specific_date,
+    recurrence_type, // 'daily', 'weekly', or 'monthly'
   } = req.body;
-  
+
   console.log("Creating availability with data:", req.body);
 
   // Validation
-  if (!start_time || !end_time || !slot_duration) {
+  if (
+    !selected_date ||
+    !start_time ||
+    !end_time ||
+    !slot_duration ||
+    !recurrence_type
+  ) {
     return res.status(400).json({
-      message: "start_time, end_time, and slot_duration are required",
+      message:
+        "selected_date, start_time, end_time, slot_duration, and recurrence_type are required",
     });
   }
 
   // Validate recurrence type
-  if (
-    recurrence_type &&
-    !["daily", "weekly", "monthly"].includes(recurrence_type)
-  ) {
+  if (!["daily", "weekly", "monthly"].includes(recurrence_type)) {
     return res.status(400).json({
       message: "recurrence_type must be daily, weekly, or monthly",
     });
   }
+
+  // Calculate end date based on recurrence type
+  const start_date = selected_date;
+  const end_date = calculateEndDate(selected_date, recurrence_type);
+
+  console.log(
+    `Calculated dates - Start: ${start_date}, End: ${end_date}, Type: ${recurrence_type}`,
+  );
 
   // Insert availability
   const { data, error } = await supabase
     .from("availability")
     .insert({
       admin_id: adminId,
-      day_of_week,
+      start_date,
+      end_date,
       start_time,
       end_time,
       slot_duration,
       recurrence_type,
-      specific_date,
     })
     .select()
     .single();
@@ -64,13 +98,13 @@ export const getAdminAvailability = asyncHandler(async (req, res) => {
   const { adminId } = req.params;
 
   console.log("Fetching availability for adminId:", adminId);
-  
+
   const { data, error } = await supabase
     .from("availability")
     .select("*")
     .eq("admin_id", adminId)
     .eq("is_active", true)
-    .order("day_of_week", { ascending: true });
+    .order("start_date", { ascending: true });
 
   if (error) {
     return res.status(400).json({
@@ -88,8 +122,7 @@ export const getMyAvailability = asyncHandler(async (req, res) => {
   const adminId = req.user.id;
 
   console.log("Fetching availability for adminId:", adminId);
-  const { data, error } = await supabasefix
-    
+  const { data, error } = await supabase
     .from("availability")
     .select("*")
     .eq("admin_id", adminId)
