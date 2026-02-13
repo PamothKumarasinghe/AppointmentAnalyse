@@ -126,7 +126,7 @@ export const getMyAvailability = asyncHandler(async (req, res) => {
     .from("availability")
     .select("*")
     .eq("admin_id", adminId)
-    .order("day_of_week", { ascending: true });
+    .order("start_date", { ascending: true });
 
   if (error) {
     return res.status(400).json({
@@ -144,22 +144,39 @@ export const updateAvailability = asyncHandler(async (req, res) => {
   const adminId = req.user.id;
   const { availabilityId } = req.params;
   const {
-    day_of_week,
+    selected_date,
     start_time,
     end_time,
     slot_duration,
     recurrence_type,
-    specific_date,
     is_active,
   } = req.body;
 
   const updates = {};
-  if (day_of_week !== undefined) updates.day_of_week = day_of_week;
+  
+  // If selected_date or recurrence_type is being updated, recalculate date range
+  if (selected_date !== undefined || recurrence_type !== undefined) {
+    // Fetch current record to get missing values
+    const { data: current } = await supabase
+      .from("availability")
+      .select("*")
+      .eq("id", availabilityId)
+      .eq("admin_id", adminId)
+      .single();
+    
+    if (current) {
+      const dateToUse = selected_date !== undefined ? selected_date : current.start_date;
+      const recurrenceToUse = recurrence_type !== undefined ? recurrence_type : current.recurrence_type;
+      
+      updates.start_date = dateToUse;
+      updates.end_date = calculateEndDate(dateToUse, recurrenceToUse);
+    }
+  }
+  
   if (start_time !== undefined) updates.start_time = start_time;
   if (end_time !== undefined) updates.end_time = end_time;
   if (slot_duration !== undefined) updates.slot_duration = slot_duration;
   if (recurrence_type !== undefined) updates.recurrence_type = recurrence_type;
-  if (specific_date !== undefined) updates.specific_date = specific_date;
   if (is_active !== undefined) updates.is_active = is_active;
 
   const { data, error } = await supabase

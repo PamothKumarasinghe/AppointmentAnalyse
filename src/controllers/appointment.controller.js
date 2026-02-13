@@ -256,15 +256,14 @@ export const getAvailableSlots = asyncHandler(async (req, res) => {
     });
   }
 
-  const dayOfWeek = new Date(date).getDay();
-
-  // Get availability for this day
+  // Get availability where the requested date falls within the range
   const { data: availability, error: availError } = await supabase
     .from("availability")
     .select("*")
     .eq("admin_id", adminId)
     .eq("is_active", true)
-    .or(`day_of_week.eq.${dayOfWeek},specific_date.eq.${date}`);
+    .lte("start_date", date)
+    .gte("end_date", date);
 
   if (availError || !availability || availability.length === 0) {
     return res.json({ slots: [] });
